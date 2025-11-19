@@ -1,5 +1,5 @@
 export const environment = {
   production:false,
-  apiURL: "http://localhost:3000/api",
+  apiURL: "https://nti-ecommerce-backend.vercel.app/api",
   staticURL:"http://localhost:3000",
 }

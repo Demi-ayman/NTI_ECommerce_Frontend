@@ -1,5 +1,5 @@
 export const environment = {
   production:true,
-  apiURL:"http://mydomain/api",
+  apiURL:"https://nti-ecommerce-backend.vercel.app/api",
   staticURL:"http://mydomain/uploads/",
 }
