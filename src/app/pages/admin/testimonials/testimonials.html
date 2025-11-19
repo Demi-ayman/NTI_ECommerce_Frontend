@@ -1,0 +1,121 @@
+<div class="admin-panel">
+  <div class="panel-header">
+    <h1>Admin Panel</h1>
+    <h2>Testimonials Management</h2>
+  </div>
+
+  <!-- Search and Filters Section -->
+  <div class="filters-section">
+    <div class="filters-container">
+      <div class="search-bar">
+        <div class="search-input-wrapper">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Search testimonials..."
+            class="search-input"
+          >
+          <span class="search-icon">🔍</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="statusFilter">Filter by Status</label>
+        <select
+          id="statusFilter"
+          [(ngModel)]="filterApproved"
+          class="filter-select"
+        >
+          <option value="all">All Testimonials</option>
+          <option value="approved">Approved Only</option>
+          <option value="pending">Pending Only</option>
+        </select>
+      </div>
+
+      <div class="testimonials-stats">
+        <span class="stats-badge">{{ displayedCount }} Displayed</span>
+        <span class="stats-badge stats-pending">{{ pendingCount }} Pending</span>
+        <span class="stats-badge stats-approved">{{ approvedCount }} Approved</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container" *ngIf="!isLoading; else loading">
+    <div class="testimonials-grid">
+      <div *ngFor="let testimonial of filteredTestimonials" class="testimonial-card">
+        <div class="testimonial-header">
+          <div class="user-info">
+            <div class="user-avatar">
+              {{ testimonial.name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-details">
+              <h4 class="user-name">{{ testimonial.name }}</h4>
+              <p class="user-role">Customer</p>
+            </div>
+          </div>
+          <div class="testimonial-meta">
+            <span class="rating">
+              <span *ngFor="let star of getStars(5)" class="star" [class.filled]="star <= testimonial.rating">
+                ★
+              </span>
+            </span>
+            <span class="date">{{ getTimeAgo(testimonial.createdAt) }}</span>
+          </div>
+        </div>
+
+        <div class="testimonial-message">
+          "{{ testimonial.message }}"
+        </div>
+
+        <div class="testimonial-footer">
+          <div class="status-info">
+            <span class="status-badge" [class]="getStatusClass(testimonial.approved)">
+              {{ getStatusText(testimonial.approved) }}
+            </span>
+            <span class="submitted-by">by {{ testimonial.user.name }}</span>
+          </div>
+
+          <div class="testimonial-actions">
+            <button
+              class="btn btn-toggle"
+              [class.btn-approve]="!testimonial.approved"
+              [class.btn-unapprove]="testimonial.approved"
+              (click)="toggleApproval(testimonial)"
+            >
+              {{ testimonial.approved ? 'Set Pending' : 'Approve' }}
+            </button>
+            <button
+              class="btn btn-delete"
+              (click)="deleteTestimonial(testimonial)"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="filteredTestimonials.length === 0" class="no-data">
+        <div *ngIf="searchTerm || filterApproved !== 'all'; else noTestimonials">
+          <h3>No Testimonials Found</h3>
+          <p>No testimonials match your current filters.</p>
+          <button class="btn btn-primary" (click)="searchTerm = ''; filterApproved = 'all'">
+            Clear Filters
+          </button>
+        </div>
+        <ng-template #noTestimonials>
+          <div class="no-data-content">
+            <h3>No Testimonials Yet</h3>
+            <p>There are no testimonials in the system yet.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #loading>
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading testimonials...
+    </div>
+  </ng-template>
+</div>

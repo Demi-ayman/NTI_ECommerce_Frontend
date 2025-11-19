@@ -1,0 +1,170 @@
+<div class="admin-panel">
+  <div class="panel-header">
+    <h1>Admin Panel</h1>
+    <h2>Order Management</h2>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="statusFilter">Filter by Status</label>
+        <select
+          id="statusFilter"
+          [(ngModel)]="selectedStatus"
+          (change)="onStatusFilterChange()"
+          class="filter-select"
+        >
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+      <div class="orders-stats">
+        <span class="stats-badge">{{ totalItems }} Total Orders</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container" *ngIf="!isLoading; else loading">
+    <table>
+      <thead>
+        <tr>
+          <th>ORDER INFO</th>
+          <th>CUSTOMER</th>
+          <th>PRODUCTS</th>
+          <th>PAYMENT</th>
+          <th>STATUS</th>
+          <th>ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders" class="order-row">
+          <td>
+            <div class="order-info">
+              <div class="order-id" *ngIf="order._id as id">#{{ id.slice(-8).toUpperCase() }}</div>
+
+              <div class="order-date">{{ order.createdAt | date:'MMM d, y, h:mm a' }}</div>
+              <div class="order-amount">${{ order.totalPrice?.toFixed(2) }}</div>
+            </div>
+          </td>
+          <td>
+            <div class="customer-info">
+              <div class="customer-name">{{ order.name }}</div>
+              <div class="customer-email" *ngIf="order.userId?.email">{{ order.userId.email }}</div>
+              <div class="customer-address">{{ order.address }}</div>
+            </div>
+          </td>
+          <td>
+            <div class="products-info">
+              <div *ngFor="let item of order.products" class="product-item">
+                <div class="product-details">
+                  <span class="product-name">
+                    {{ getProductName(item.product) }}
+                  </span>
+                  <div class="product-meta">
+                    <span class="product-quantity">Qty: {{ item.quantity }}</span>
+                    <span class="product-price">${{ item.price?.toFixed(2) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="payment-info">
+              <div class="payment-method">
+                <span class="payment-icon">{{ getPaymentMethodIcon(order.paymentMethod) }}</span>
+                {{ order.paymentMethod }}
+              </div>
+              <div class="payment-status" [class.paid]="order.isPaid" [class.unpaid]="!order.isPaid">
+                {{ order.isPaid ? 'Paid' : 'Unpaid' }}
+              </div>
+              <div class="payment-date" *ngIf="order.paidAt">
+                {{ order.paidAt | date:'MMM d, y' }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <select
+              [value]="order.status"
+              (change)="onStatusChange(order, $event)"
+              class="status-select"
+              [class]="getStatusClass(order.status)"
+            >
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <!-- Cancelled is not included as per requirement -->
+            </select>
+            <div class="status-updated">
+              Updated: {{ order.updatedAt | date:'MMM d, y' }}
+            </div>
+          </td>
+          <td>
+            <div class="order-actions">
+              <button class="btn btn-view" [routerLink]="['/admin/orders', order._id]">
+                View Details
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="orders.length === 0">
+          <td colspan="6" class="no-data">
+            <div *ngIf="selectedStatus !== 'all'; else noOrders">
+              No orders found with status "{{ selectedStatus }}"
+            </div>
+            <ng-template #noOrders>
+              <div class="no-data-content">
+                <h3>No Orders Found</h3>
+                <p>There are no orders in the system yet.</p>
+              </div>
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #loading>
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading orders...
+    </div>
+  </ng-template>
+
+  <!-- Pagination -->
+  <div class="panel-footer" *ngIf="orders.length > 0 && !isLoading">
+    <div class="orders-count">{{ totalDisplayed }}</div>
+    <div class="pagination">
+      <button
+        (click)="onPageChange(currentPage - 1)"
+        [disabled]="currentPage === 1 || isLoading"
+        class="pagination-btn"
+        title="Previous page"
+      >
+
+      </button>
+
+      <button
+        *ngFor="let page of getPageNumbers()"
+        (click)="onPageChange(page)"
+        [class.active]="currentPage === page"
+        class="pagination-btn"
+        [title]="'Page ' + page"
+        [disabled]="isLoading"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        (click)="onPageChange(currentPage + 1)"
+        [disabled]="currentPage === totalPages || isLoading"
+        class="pagination-btn"
+        title="Next page"
+      >
+
+      </button>
+    </div>
+  </div>
+</div>

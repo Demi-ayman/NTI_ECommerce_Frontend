@@ -1,0 +1,271 @@
+<div class="categories-page">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Categories Management</h1>
+        <p>Manage product categories and their subcategories (Total: {{ totalCategories }} categories)</p>
+      </div>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <span>+</span> Create Category
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <span>⚠️</span>
+    {{ errorMessage }}
+    <button class="close-btn" (click)="errorMessage = null">×</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>✅</span>
+    {{ successMessage }}
+    <button class="close-btn" (click)="successMessage = null">×</button>
+  </div>
+
+  <!-- Categories Table -->
+  <div class="table-container">
+    <div class="table-header">
+      <div class="table-actions">
+        <div class="search-box">
+          <input
+            type="text"
+            [value]="searchTerm"
+            (input)="onSearchInput($event)"
+            placeholder="Search categories..."
+            class="search-input">
+          <span class="search-icon">🔍</span>
+          <button
+            *ngIf="searchTerm"
+            class="clear-search-btn"
+            (click)="clearSearch()"
+            title="Clear search">
+            ✕
+          </button>
+        </div>
+        <div class="table-info">
+          <span *ngIf="searchTerm && categories.length > 0">
+            {{ categories.length }} results for "{{ searchTerm }}"
+          </span>
+          <span *ngIf="!searchTerm">
+            Showing {{ categories.length }} of {{ totalCategories }} categories
+          </span>
+          <span *ngIf="searchTerm && categories.length === 0" class="no-results">
+            No results for "{{ searchTerm }}"
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading categories...</p>
+    </div>
+
+    <div *ngIf="!loading && categories.length === 0 && searchTerm" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No categories found</h3>
+      <p>No categories match your search for "{{ searchTerm }}"</p>
+      <button class="btn-secondary" (click)="clearSearch()">Clear search</button>
+    </div>
+
+    <div *ngIf="!loading && categories.length === 0 && !searchTerm" class="empty-state">
+      <div class="empty-icon">📁</div>
+      <h3>No categories found</h3>
+      <p>There are no categories in the system yet.</p>
+      <button class="btn-primary" (click)="openCreateModal()">Create Your First Category</button>
+    </div>
+
+    <div *ngIf="!loading && categories.length > 0" class="categories-grid">
+      <div *ngFor="let category of categories" class="category-card">
+        <div class="category-header">
+          <h3 class="category-name">{{ category.name }}</h3>
+          <div class="category-actions">
+            <button class="btn-action btn-edit" (click)="openEditModal(category)" title="Edit Category">
+              ✏️
+            </button>
+            <button class="btn-action btn-delete" (click)="openDeleteModal(category)" title="Delete Category">
+              🗑️
+            </button>
+          </div>
+        </div>
+
+        <p class="category-description">{{ category.description || 'No description' }}</p>
+
+        <div class="category-stats">
+          <div class="stat">
+            <span class="stat-number">{{ getSubcategoryCount(category) }}</span>
+            <span class="stat-label">Subcategories</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">{{ getProductCount(category) }}</span>
+            <span class="stat-label">Products</span>
+          </div>
+        </div>
+
+        <div class="category-footer">
+          <button class="btn-view" (click)="viewSubcategories(category)">
+            View Subcategories →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!loading && totalPages > 1" class="pagination">
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage === 1"
+        (click)="onPageChange(currentPage - 1)">
+        ← Previous
+      </button>
+
+      <div class="pagination-pages">
+        <button
+          *ngFor="let page of pages"
+          class="pagination-page"
+          [class.active]="page === currentPage"
+          (click)="onPageChange(page)">
+          {{ page }}
+        </button>
+      </div>
+
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="onPageChange(currentPage + 1)">
+        Next →
+      </button>
+    </div>
+  </div>
+
+  <!-- Create Category Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Create Category</h2>
+        <button class="modal-close" (click)="closeCreateModal()">×</button>
+      </div>
+
+      <form [formGroup]="createCategoryForm" (ngSubmit)="createCategory()" class="modal-form">
+        <div class="form-group">
+          <label for="name">Category Name *</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="Enter category name"
+            class="form-control">
+          <div *ngIf="createCategoryForm.get('name')?.touched && createCategoryForm.get('name')?.errors" class="error-text">
+            <div *ngIf="createCategoryForm.get('name')?.errors?.['required']">Name is required</div>
+            <div *ngIf="createCategoryForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            placeholder="Enter category description (optional)"
+            class="form-control"
+            rows="3"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="createCategoryForm.invalid || loading">
+            {{ loading ? 'Creating...' : 'Create Category' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Category Modal -->
+  <div *ngIf="showEditModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Edit Category</h2>
+        <button class="modal-close" (click)="closeEditModal()">×</button>
+      </div>
+
+      <form [formGroup]="editCategoryForm" (ngSubmit)="updateCategory()" class="modal-form">
+        <div class="form-group">
+          <label for="edit-name">Category Name *</label>
+          <input
+            id="edit-name"
+            type="text"
+            formControlName="name"
+            placeholder="Enter category name"
+            class="form-control">
+          <div *ngIf="editCategoryForm.get('name')?.touched && editCategoryForm.get('name')?.errors" class="error-text">
+            <div *ngIf="editCategoryForm.get('name')?.errors?.['required']">Name is required</div>
+            <div *ngIf="editCategoryForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-description">Description</label>
+          <textarea
+            id="edit-description"
+            formControlName="description"
+            placeholder="Enter category description"
+            class="form-control"
+            rows="3"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeEditModal()">Cancel</button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="editCategoryForm.invalid || loading">
+            {{ loading ? 'Updating...' : 'Update Category' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <!-- In your delete modal template -->
+<div *ngIf="showDeleteModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3>Delete Category Permanently</h3>
+
+    <div *ngIf="selectedCategory && hasSubcategoriesOrProducts(selectedCategory)" class="warning-message">
+      <p><strong>Warning:</strong> This category has subcategories or products and cannot be deleted.</p>
+      <p>Please remove all subcategories and products first.</p>
+    </div>
+
+    <div *ngIf="selectedCategory && !hasSubcategoriesOrProducts(selectedCategory)" class="delete-warning">
+      <p><strong>This action cannot be undone!</strong></p>
+      <p>Are you sure you want to permanently delete the category "{{ selectedCategory.name }}"?</p>
+    </div>
+
+    <div class="modal-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="closeDeleteModal()"
+        [disabled]="loading">
+        Cancel
+      </button>
+
+      <button
+        *ngIf="selectedCategory && !hasSubcategoriesOrProducts(selectedCategory)"
+        type="button"
+        class="btn btn-danger"
+        (click)="deleteCategory()"
+        [disabled]="loading">
+        {{ loading ? 'Deleting...' : 'Delete Permanently' }}
+      </button>
+    </div>
+  </div>
+</div>
+</div>

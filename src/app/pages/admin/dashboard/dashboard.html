@@ -1,0 +1,101 @@
+<div class="dashboard">
+  <div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome back, {{ user?.name }}! Here's what's happening today.</p>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading; else loadingTemplate">
+    <!-- Users Stats -->
+    <div class="stat-card">
+      <div class="stat-icon users">👥</div>
+      <div class="stat-info">
+        <h3>{{ stats.totalUsers }}</h3>
+        <p>Total Users</p>
+        <div class="stat-detail">
+          <span class="detail-item">
+            <strong>{{ stats.totalAdmins }}</strong> admins
+          </span>
+          <span class="detail-item">
+            <strong>{{ stats.totalCustomers }}</strong> customers
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon new-users">🆕</div>
+      <div class="stat-info">
+        <h3>{{ stats.newUsers }}</h3>
+        <p>New Users (30d)</p>
+        <div class="stat-trend" [class.positive]="stats.newUsers > 0">
+          {{ newUsersPercentage }}% of total
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon products">📦</div>
+      <div class="stat-info">
+        <h3>{{ stats.totalProducts }}</h3>
+        <p>Total Products</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon orders">💰</div>
+      <div class="stat-info">
+        <h3>{{ stats.totalOrders }}</h3>
+        <p>Total Orders</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon categories">📁</div>
+      <div class="stat-info">
+        <h3>{{ stats.totalCategories }}</h3>
+        <p>Categories</p>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #loadingTemplate>
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading dashboard data...</p>
+    </div>
+  </ng-template>
+
+  <div class="recent-activity">
+    <h2>Quick Actions</h2>
+    <div class="action-buttons">
+      <a routerLink="/admin/users" class="action-btn">
+        <span>👥</span>
+        <div class="action-text">
+          <strong>Manage Users</strong>
+          <small>View and manage all users</small>
+        </div>
+      </a>
+      <a routerLink="/admin/product/new" class="action-btn">
+        <span>➕</span>
+        <div class="action-text">
+          <strong>Add Product</strong>
+          <small>Create new product</small>
+        </div>
+      </a>
+      <a routerLink="/admin/categories" class="action-btn">
+        <span>📁</span>
+        <div class="action-text">
+          <strong>Categories</strong>
+          <small>Manage categories</small>
+        </div>
+      </a>
+      <a routerLink="/admin/orders-admin" class="action-btn">
+        <span>📦</span>
+        <div class="action-text">
+          <strong>Orders</strong>
+          <small>View all orders</small>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>

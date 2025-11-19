@@ -1,0 +1,209 @@
+<div class="home-container">
+  <!-- Modern Hero Section -->
+  <section class="hero-section">
+    <div class="hero-background">
+      <div class="hero-gradient"></div>
+      <div class="hero-pattern"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-text">
+        <!-- Badge -->
+        <div class="hero-badge">
+          <span>New Collection 2024</span>
+        </div>
+
+        <!-- Main Heading -->
+        <h1 class="hero-title">
+          <span class="title-line">Elevate Your</span>
+          <span class="title-line accent">Style Story</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="hero-subtitle">
+          Discover the perfect blend of comfort, quality, and contemporary fashion.
+          Curated collections for the modern individual who values style and substance.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="hero-actions">
+          <button class="btn btn-primary" routerLink="/shop">
+            <span>Shop Collection</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+          <button class="btn btn-secondary">
+            <span>Watch Story</span>
+            <i class="fas fa-play"></i>
+          </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-number">10K+</div>
+            <div class="stat-label">Happy Customers</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">500+</div>
+            <div class="stat-label">Premium Products</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">50+</div>
+            <div class="stat-label">Brand Partners</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Visual -->
+      <div class="hero-visual">
+        <div class="main-showcase">
+          <div class="showcase-content">
+            <div class="showcase-icon">
+              <i class="fas fa-crown"></i>
+            </div>
+            <h3>Premium Collection</h3>
+            <p>Discover our exclusive 2024 lineup</p>
+            <div class="showcase-badge">
+              <span>Featured</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Elements -->
+        <div class="floating-element element-1">
+          <div class="element-content">
+            <i class="fas fa-star"></i>
+            <span>Trending</span>
+          </div>
+        </div>
+
+        <div class="floating-element element-2">
+          <div class="element-content">
+            <i class="fas fa-bolt"></i>
+            <span>New Arrivals</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator">
+      <div class="scroll-arrow">
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <span>Discover More</span>
+    </div>
+  </section>
+
+  <!-- Brands Section -->
+  <section class="brands-section">
+    <div class="container">
+      <div class="brands-scroll">
+        <div class="brands-track">
+          <div class="brand-item" *ngFor="let brand of ['Nike', 'Adidas', 'Zara', 'H&M', 'Gucci', 'Puma', 'Levi\'s']">
+            <span class="brand-name">{{ brand }}</span>
+          </div>
+          <!-- Duplicate for seamless loop -->
+          <div class="brand-item" *ngFor="let brand of ['Nike', 'Adidas', 'Zara', 'H&M', 'Gucci', 'Puma', 'Levi\'s']">
+            <span class="brand-name">{{ brand }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Why Choose DemiStore</h2>
+        <p class="section-subtitle">Experience unparalleled quality and service that sets us apart</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card" *ngFor="let feature of features">
+          <div class="feature-icon-wrapper">
+            <i class="fas {{ feature.icon }}"></i>
+          </div>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-description">{{ feature.description }}</p>
+          <div class="feature-hover"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Shop by Category</h2>
+        <p class="section-subtitle">Explore our carefully curated collections</p>
+      </div>
+
+      <div class="categories-grid">
+        <div class="category-card" *ngFor="let category of categories; let i = index"
+              [style.animation-delay]="i * 0.1 + 's'">
+          <div class="category-content">
+            <!-- <div class="category-icon">
+              <i class="fas {{ category.icon }}"></i>
+            </div> -->
+            <h3 class="category-name">{{ category.name }}</h3>
+            <p class="category-description">{{ category.description }}</p>
+            <button class="btn btn-category" routerLink="/shop">
+              <span>Explore</span>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+          <div class="category-overlay"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="cta-background">
+      <div class="cta-gradient"></div>
+    </div>
+    <div class="container">
+      <div class="cta-content">
+        <h2 class="cta-title">Ready to Transform Your Style?</h2>
+        <p class="cta-subtitle">
+          Join thousands of satisfied customers and discover why DemiStore is the preferred choice for modern fashion enthusiasts.
+        </p>
+        <div class="cta-actions">
+          <button class="btn btn-primary btn-large" routerLink="/shop">
+            <span>Start Shopping Now</span>
+            <i class="fas fa-shopping-bag"></i>
+          </button>
+          <button class="btn btn-outline-white">
+            <span>Learn Our Story</span>
+            <i class="fas fa-play-circle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter Section -->
+  <section class="newsletter-section">
+    <div class="container">
+      <div class="newsletter-content">
+        <div class="newsletter-text">
+          <h3>Stay in the Loop</h3>
+          <p>Get exclusive access to new collections, special offers, and style tips.</p>
+        </div>
+        <div class="newsletter-form">
+          <div class="input-group">
+            <input type="email" placeholder="Enter your email address" class="newsletter-input">
+            <button class="btn btn-primary">
+              <span>Subscribe</span>
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

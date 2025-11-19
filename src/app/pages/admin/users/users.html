@@ -1,0 +1,318 @@
+<div class="users-page">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Users Management</h1>
+        <p>Manage all registered users in the system (Total: {{ totalUsers }} users)</p>
+      </div>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <span>+</span> Create Admin
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <span>⚠️</span>
+    {{ errorMessage }}
+    <button class="close-btn" (click)="errorMessage = null">×</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>✅</span>
+    {{ successMessage }}
+    <button class="close-btn" (click)="successMessage = null">×</button>
+  </div>
+
+   <!-- Users Table -->
+  <div class="table-container">
+    <div class="table-header">
+      <div class="table-actions">
+        <div class="search-box">
+          <input
+            type="text"
+            [value]="searchTerm"
+            (input)="onSearchInput($event)"
+            placeholder="Search by name, email, role, or ID..."
+            class="search-input">
+          <span class="search-icon">🔍</span>
+          <button
+            *ngIf="searchTerm"
+            class="clear-search-btn"
+            (click)="clearSearch()"
+            title="Clear search">
+            ✕
+          </button>
+        </div>
+
+        <div class="table-info">
+          <span *ngIf="searchTerm && filteredUsers.length > 0">
+            {{ filteredUsers.length }} results for "{{ searchTerm }}"
+          </span>
+          <span *ngIf="!searchTerm">
+            Showing {{ users.length }} of {{ totalUsers }} users
+          </span>
+          <span *ngIf="searchTerm && filteredUsers.length === 0" class="no-results">
+            No results for "{{ searchTerm }}"
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading users...</p>
+    </div>
+
+    <div *ngIf="!loading && filteredUsers.length === 0 && searchTerm" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No users found</h3>
+      <p>No users match your search for "{{ searchTerm }}"</p>
+      <button class="btn-secondary" (click)="searchTerm = ''; filterUsers()">Clear search</button>
+    </div>
+
+    <div *ngIf="!loading && filteredUsers.length === 0 && !searchTerm" class="empty-state">
+      <div class="empty-icon">👥</div>
+      <h3>No users found</h3>
+      <p>There are no users in the system yet.</p>
+    </div>
+
+    <table *ngIf="!loading && filteredUsers.length > 0" class="users-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Created</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of filteredUsers" [class.inactive]="user.isActive === false">
+          <td class="user-cell">
+            <div class="user-avatar" [class.admin]="user.role === 'admin'">
+              {{ user.name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-info">
+              <div class="user-name">{{ user.name }}</div>
+              <div class="user-id">ID: {{ user._id | slice:0:8 }}...</div>
+            </div>
+          </td>
+          <td class="email-cell">{{ user.email }}</td>
+          <td>
+            <span [class]="getRoleBadgeClass(user.role)" class="role-badge">
+              {{ user.role }}
+            </span>
+          </td>
+          <td class="date-cell">
+            {{ user.createdAt | date:'mediumDate' }}
+          </td>
+          <td>
+            <span *ngIf="user.isActive === false" class="status-badge inactive">Inactive</span>
+            <span *ngIf="user.isActive === true || user.isActive === undefined" class="status-badge active">Active</span>
+          </td>
+          <td class="actions-cell">
+            <button
+              class="btn-action btn-edit"
+              (click)="openEditModal(user)"
+              title="Edit User">
+              ✏️ Edit
+            </button>
+            <button
+              class="btn-action btn-delete"
+              (click)="openDeleteModal(user)"
+              [disabled]="!canDeleteUser(user)"
+              [title]="canDeleteUser(user) ? 'Deactivate User' : 'Cannot deactivate admin users'">
+              🗑️ Deactivate
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div *ngIf="!loading && totalPages > 1" class="pagination">
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage === 1"
+        (click)="onPageChange(currentPage - 1)">
+        ← Previous
+      </button>
+
+      <div class="pagination-pages">
+        <button
+          *ngFor="let page of pages"
+          class="pagination-page"
+          [class.active]="page === currentPage"
+          (click)="onPageChange(page)">
+          {{ page }}
+        </button>
+      </div>
+
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="onPageChange(currentPage + 1)">
+        Next →
+      </button>
+    </div>
+  </div>
+<!-- Show message when searching with pagination -->
+    <div *ngIf="searchTerm && totalPages > 1" class="search-pagination-info">
+      <p>Search results are limited to current page. Clear search to see all users.</p>
+    </div>
+  
+  <!-- Create Admin Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Create Admin User</h2>
+        <button class="modal-close" (click)="closeCreateModal()">×</button>
+      </div>
+
+      <form [formGroup]="createUserForm" (ngSubmit)="createAdmin()" class="modal-form">
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="Enter full name"
+            class="form-control">
+          <div *ngIf="createUserForm.get('name')?.touched && createUserForm.get('name')?.errors" class="error-text">
+            <div *ngIf="createUserForm.get('name')?.errors?.['required']">Name is required</div>
+            <div *ngIf="createUserForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="Enter email address"
+            class="form-control">
+          <div *ngIf="createUserForm.get('email')?.touched && createUserForm.get('email')?.errors" class="error-text">
+            <div *ngIf="createUserForm.get('email')?.errors?.['required']">Email is required</div>
+            <div *ngIf="createUserForm.get('email')?.errors?.['email']">Please enter a valid email</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="Enter password"
+            class="form-control">
+          <div *ngIf="createUserForm.get('password')?.touched && createUserForm.get('password')?.errors" class="error-text">
+            <div *ngIf="createUserForm.get('password')?.errors?.['required']">Password is required</div>
+            <div *ngIf="createUserForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="createUserForm.invalid || loading">
+            {{ loading ? 'Creating...' : 'Create Admin' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div *ngIf="showEditModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Edit User</h2>
+        <button class="modal-close" (click)="closeEditModal()">×</button>
+      </div>
+
+      <form [formGroup]="editUserForm" (ngSubmit)="updateUser()" class="modal-form">
+        <div class="form-group">
+          <label for="edit-name">Full Name *</label>
+          <input
+            id="edit-name"
+            type="text"
+            formControlName="name"
+            placeholder="Enter full name"
+            class="form-control">
+          <div *ngIf="editUserForm.get('name')?.touched && editUserForm.get('name')?.errors" class="error-text">
+            <div *ngIf="editUserForm.get('name')?.errors?.['required']">Name is required</div>
+            <div *ngIf="editUserForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-email">Email *</label>
+          <input
+            id="edit-email"
+            type="email"
+            formControlName="email"
+            placeholder="Enter email address"
+            class="form-control">
+          <div *ngIf="editUserForm.get('email')?.touched && editUserForm.get('email')?.errors" class="error-text">
+            <div *ngIf="editUserForm.get('email')?.errors?.['required']">Email is required</div>
+            <div *ngIf="editUserForm.get('email')?.errors?.['email']">Please enter a valid email</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-role">Role *</label>
+          <select id="edit-role" formControlName="role" class="form-control">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeEditModal()">Cancel</button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="editUserForm.invalid || loading">
+            {{ loading ? 'Updating...' : 'Update User' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteModal" class="modal-overlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Deactivate User</h2>
+        <button class="modal-close" (click)="closeDeleteModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="warning-icon">⚠️</div>
+        <h3>Are you sure?</h3>
+        <p>You are about to deactivate user <strong>{{ selectedUser?.name }}</strong>. They will no longer be able to access the system.</p>
+
+        <div class="info-message">
+          <strong>Note:</strong> This action can be reversed by editing the user's status.
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button
+          type="button"
+          class="btn-danger"
+          (click)="deleteUser()"
+          [disabled]="loading">
+          {{ loading ? 'Deactivating...' : 'Deactivate User' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

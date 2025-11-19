@@ -1,0 +1,497 @@
+<div class="product-list-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h1>Product Management</h1>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <span class="btn-icon">➕</span>
+      Add New Product
+    </button>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="search-section">
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="Search products..."
+        [value]="searchTerm"
+        (input)="onSearchInput($event)"
+        class="search-input"
+      />
+      <button *ngIf="searchTerm" (click)="clearSearch()" class="clear-search">
+        ✕
+      </button>
+    </div>
+    <div class="results-info">
+      Showing {{products.length}} of {{totalProducts}} products
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{errorMessage}}
+  </div>
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{successMessage}}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-section">
+    <div class="spinner"></div>
+    <p>Loading products...</p>
+  </div>
+
+  <!-- Products Table -->
+  <div *ngIf="!loading" class="products-table-container">
+    <table class="products-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Category & Subcategory</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products" class="product-row">
+          <td class="product-image-cell">
+            <div class="image-container">
+              <img
+                [src]="staticURL + product.imgURL"
+                [alt]="product.name"
+                class="product-image"
+                (error)="handleImageError($event)"
+              />
+              <div class="image-placeholder" style="display: none;">
+                <span>📦</span>
+              </div>
+            </div>
+          </td>
+          <td class="product-name-cell">
+            <div class="product-name">{{product.name}}</div>
+            <div class="product-description">{{(product.description || '').slice(0,50)}}...</div>
+          </td>
+          <td class="product-category">
+            <div class="category-info">
+              <span class="category-badge">{{product.category?.name || 'No Category'}}</span>
+              <span *ngIf="product.subcategory" class="subcategory-badge">
+                {{product.subcategory.name}}
+              </span>
+              <span *ngIf="!product.subcategory" class="no-subcategory">
+                No Subcategory
+              </span>
+            </div>
+          </td>
+          <td class="product-price">${{product.price}}</td>
+          <td class="product-stock">
+            <span [class]="'stock-badge ' + (product.stock > 0 ? 'in-stock' : 'out-of-stock')">
+              {{product.stock > 0 ? product.stock + ' in stock' : 'Out of stock'}}
+            </span>
+          </td>
+          <td class="product-status">
+            <span [class]="'status-badge ' + (product.isActive !== false ? 'active' : 'inactive')">
+              {{product.isActive !== false ? 'Active' : 'Inactive'}}
+            </span>
+          </td>
+          <td class="product-actions">
+            <button class="btn btn-sm btn-info" (click)="viewProduct(product)">
+              👁️ View
+            </button>
+            <button class="btn btn-sm btn-warning" (click)="openEditModal(product)">
+              ✏️ Edit
+            </button>
+            <!-- Remove delete button since we're not deleting products -->
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="products.length === 0 && !loading" class="empty-state">
+      <div class="empty-icon">📦</div>
+      <h3>No products found</h3>
+      <p *ngIf="searchTerm">Try adjusting your search terms</p>
+      <p *ngIf="!searchTerm">Get started by adding your first product</p>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        Add Your First Product
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="products.length > 0 && !loading" class="pagination">
+    <button
+      class="btn btn-outline"
+      (click)="onPageChange(currentPage - 1)"
+      [disabled]="currentPage === 1"
+    >
+      ← Previous
+    </button>
+
+    <div class="page-numbers">
+      <button
+        *ngFor="let page of pages"
+        class="page-btn"
+        [class.active]="page === currentPage"
+        (click)="onPageChange(page)"
+      >
+        {{page}}
+      </button>
+    </div>
+
+    <button
+      class="btn btn-outline"
+      (click)="onPageChange(currentPage + 1)"
+      [disabled]="currentPage === totalPages"
+    >
+      Next →
+    </button>
+  </div>
+
+  <!-- Create Product Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay">
+    <div class="modal-content large-modal">
+      <div class="modal-header">
+        <h3>Create New Product</h3>
+        <button class="modal-close" (click)="closeCreateModal()">×</button>
+      </div>
+
+      <form [formGroup]="createProductForm" (ngSubmit)="createProduct()" class="modal-form">
+        <div class="form-columns">
+          <!-- Left Column - Basic Info -->
+          <div class="form-column">
+            <div class="form-group">
+              <label for="create-name">Product Name *</label>
+              <input
+                type="text"
+                id="create-name"
+                formControlName="name"
+                class="form-control"
+                placeholder="Enter product name"
+                [class.error]="formControls.create['name'].touched && formControls.create['name'].invalid"
+              />
+              <div *ngIf="formControls.create['name'].touched && formControls.create['name'].invalid" class="error-message">
+                <span *ngIf="formControls.create['name'].errors?.['required']">Product name is required</span>
+                <span *ngIf="formControls.create['name'].errors?.['minlength']">Product name must be at least 2 characters</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="create-description">Description *</label>
+              <textarea
+                id="create-description"
+                formControlName="description"
+                class="form-control"
+                rows="4"
+                placeholder="Enter product description"
+                [class.error]="formControls.create['description'].touched && formControls.create['description'].invalid"
+              ></textarea>
+              <div *ngIf="formControls.create['description'].touched && formControls.create['description'].invalid" class="error-message">
+                <span *ngIf="formControls.create['description'].errors?.['required']">Description is required</span>
+                <span *ngIf="formControls.create['description'].errors?.['minlength']">Description must be at least 10 characters</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="create-price">Price ($) *</label>
+                <input
+                  type="number"
+                  id="create-price"
+                  formControlName="price"
+                  class="form-control"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [class.error]="formControls.create['price'].touched && formControls.create['price'].invalid"
+                />
+                <div *ngIf="formControls.create['price'].touched && formControls.create['price'].invalid" class="error-message">
+                  Valid price is required
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="create-stock">Stock Quantity *</label>
+                <input
+                  type="number"
+                  id="create-stock"
+                  formControlName="stock"
+                  class="form-control"
+                  min="0"
+                  placeholder="0"
+                  [class.error]="formControls.create['stock'].touched && formControls.create['stock'].invalid"
+                />
+                <div *ngIf="formControls.create['stock'].touched && formControls.create['stock'].invalid" class="error-message">
+                  Stock quantity is required
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column - Categories & Image -->
+          <div class="form-column">
+            <div class="form-group">
+              <label for="create-category">Category *</label>
+              <select
+                id="create-category"
+                formControlName="category"
+                class="form-control"
+                [class.error]="formControls.create['category'].touched && formControls.create['category'].invalid"
+                (change)="onCategoryChange(createProductForm.get('category')?.value, createProductForm)"
+              >
+                <option value="">Select a category</option>
+                <option *ngFor="let category of categories" [value]="category._id">
+                  {{category.name}}
+                </option>
+              </select>
+              <div *ngIf="formControls.create['category'].touched && formControls.create['category'].invalid" class="error-message">
+                Category is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="create-subcategory">Subcategory (Optional)</label>
+              <select
+                id="create-subcategory"
+                formControlName="subcategory"
+                class="form-control"
+                [disabled]="!createProductForm.get('category')?.value"
+              >
+                <option value="">Select a subcategory</option>
+                <option *ngFor="let subcategory of subcategories" [value]="subcategory._id">
+                  {{subcategory.name}}
+                </option>
+              </select>
+              <div *ngIf="!createProductForm.get('category')?.value" class="help-text">
+                Select a category first to see subcategories
+              </div>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="form-group">
+              <label for="create-image">Product Image</label>
+              <div class="image-upload-container">
+                <!-- Image Preview -->
+                <div *ngIf="imagePreview" class="image-preview">
+                  <img [src]="imagePreview" alt="Product preview" class="preview-image" />
+                  <button type="button" class="btn-remove-image" (click)="removeImage()">×</button>
+                </div>
+
+                <!-- Upload Area -->
+                <div class="upload-area" [class.has-image]="imagePreview">
+                  <input
+                    type="file"
+                    id="create-image"
+                    (change)="onFileSelected($event, createProductForm)"
+                    accept="image/*"
+                    class="file-input"
+                  />
+                  <label for="create-image" class="upload-label">
+                    <span class="upload-icon">📷</span>
+                    <span class="upload-text">
+                      {{ imagePreview ? 'Change Image' : 'Upload Product Image' }}
+                    </span>
+                    <span class="upload-hint">JPEG, PNG, WebP (Max 2MB)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="closeCreateModal()"
+            [disabled]="loading"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="createProductForm.invalid || loading"
+          >
+            {{ loading ? 'Creating...' : 'Create Product' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Product Modal -->
+  <div *ngIf="showEditModal" class="modal-overlay">
+    <div class="modal-content large-modal">
+      <div class="modal-header">
+        <h3>Edit Product</h3>
+        <button class="modal-close" (click)="closeEditModal()">×</button>
+      </div>
+
+      <form [formGroup]="editProductForm" (ngSubmit)="updateProduct()" class="modal-form">
+        <div class="form-columns">
+          <!-- Left Column - Basic Info -->
+          <div class="form-column">
+            <div class="form-group">
+              <label for="edit-name">Product Name *</label>
+              <input
+                type="text"
+                id="edit-name"
+                formControlName="name"
+                class="form-control"
+                placeholder="Enter product name"
+                [class.error]="formControls.edit['name'].touched && formControls.edit['name'].invalid"
+              />
+              <div *ngIf="formControls.edit['name'].touched && formControls.edit['name'].invalid" class="error-message">
+                <span *ngIf="formControls.edit['name'].errors?.['required']">Product name is required</span>
+                <span *ngIf="formControls.edit['name'].errors?.['minlength']">Product name must be at least 2 characters</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-description">Description *</label>
+              <textarea
+                id="edit-description"
+                formControlName="description"
+                class="form-control"
+                rows="4"
+                placeholder="Enter product description"
+                [class.error]="formControls.edit['description'].touched && formControls.edit['description'].invalid"
+              ></textarea>
+              <div *ngIf="formControls.edit['description'].touched && formControls.edit['description'].invalid" class="error-message">
+                <span *ngIf="formControls.edit['description'].errors?.['required']">Description is required</span>
+                <span *ngIf="formControls.edit['description'].errors?.['minlength']">Description must be at least 10 characters</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit-price">Price ($) *</label>
+                <input
+                  type="number"
+                  id="edit-price"
+                  formControlName="price"
+                  class="form-control"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [class.error]="formControls.edit['price'].touched && formControls.edit['price'].invalid"
+                />
+                <div *ngIf="formControls.edit['price'].touched && formControls.edit['price'].invalid" class="error-message">
+                  Valid price is required
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="edit-stock">Stock Quantity *</label>
+                <input
+                  type="number"
+                  id="edit-stock"
+                  formControlName="stock"
+                  class="form-control"
+                  min="0"
+                  placeholder="0"
+                  [class.error]="formControls.edit['stock'].touched && formControls.edit['stock'].invalid"
+                />
+                <div *ngIf="formControls.edit['stock'].touched && formControls.edit['stock'].invalid" class="error-message">
+                  Stock quantity is required
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column - Categories & Image -->
+          <div class="form-column">
+            <div class="form-group">
+              <label for="edit-category">Category *</label>
+              <select
+                id="edit-category"
+                formControlName="category"
+                class="form-control"
+                [class.error]="formControls.edit['category'].touched && formControls.edit['category'].invalid"
+                (change)="onCategoryChange(editProductForm.get('category')?.value, editProductForm)"
+              >
+                <option value="">Select a category</option>
+                <option *ngFor="let category of categories" [value]="category._id">
+                  {{category.name}}
+                </option>
+              </select>
+              <div *ngIf="formControls.edit['category'].touched && formControls.edit['category'].invalid" class="error-message">
+                Category is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-subcategory">Subcategory (Optional)</label>
+              <select
+                id="edit-subcategory"
+                formControlName="subcategory"
+                class="form-control"
+                [disabled]="!editProductForm.get('category')?.value"
+              >
+                <option value="">Select a subcategory</option>
+                <option *ngFor="let subcategory of subcategories" [value]="subcategory._id">
+                  {{subcategory.name}}
+                </option>
+              </select>
+              <div *ngIf="!editProductForm.get('category')?.value" class="help-text">
+                Select a category first to see subcategories
+              </div>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="form-group">
+              <label for="edit-image">Product Image</label>
+              <div class="image-upload-container">
+                <!-- Image Preview -->
+                <div *ngIf="imagePreview" class="image-preview">
+                  <img [src]="imagePreview" alt="Product preview" class="preview-image" />
+                  <button type="button" class="btn-remove-image" (click)="removeImage()">×</button>
+                </div>
+
+                <!-- Upload Area -->
+                <div class="upload-area" [class.has-image]="imagePreview">
+                  <input
+                    type="file"
+                    id="edit-image"
+                    (change)="onFileSelected($event, editProductForm)"
+                    accept="image/*"
+                    class="file-input"
+                  />
+                  <label for="edit-image" class="upload-label">
+                    <span class="upload-icon">📷</span>
+                    <span class="upload-text">
+                      {{ imagePreview ? 'Change Image' : 'Upload Product Image' }}
+                    </span>
+                    <span class="upload-hint">JPEG, PNG, WebP (Max 2MB)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="closeEditModal()"
+            [disabled]="loading"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="editProductForm.invalid || loading"
+          >
+            {{ loading ? 'Updating...' : 'Update Product' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

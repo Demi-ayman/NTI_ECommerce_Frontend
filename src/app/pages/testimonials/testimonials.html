@@ -1,0 +1,116 @@
+<div class="testimonials-container">
+  <!-- Header Section -->
+  <div class="testimonials-header">
+    <h1 class="testimonials-title">💬 Customer Testimonials</h1>
+    <p class="testimonials-subtitle">See what our customers are saying about their experience</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+          placeholder="Search testimonials..."
+          class="search-input"
+        >
+      </div>
+
+      <div class="filter-group">
+        <select [(ngModel)]="ratingFilter" (change)="applyFilters()" class="filter-select">
+          <option value="0">All Ratings</option>
+          <option value="5">⭐ 5 Stars</option>
+          <option value="4">⭐ 4 Stars</option>
+          <option value="3">⭐ 3 Stars</option>
+          <option value="2">⭐ 2 Stars</option>
+          <option value="1">⭐ 1 Star</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select [(ngModel)]="sortBy" (change)="applyFilters()" class="filter-select">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="rating">Highest Rated</option>
+        </select>
+      </div>
+
+      <button (click)="clearFilters()" class="clear-filters-btn">
+        <span class="btn-icon">🔄</span>
+        Clear Filters
+      </button>
+    </div>
+
+    <!-- Results Info -->
+    <div class="results-info">
+      <span class="results-count">
+        Showing {{ filteredTestimonials.length }} of {{ testimonials.length }} testimonials
+      </span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>Loading testimonials...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !loading" class="error-state">
+    <div class="error-content">
+      <span class="error-icon">⚠️</span>
+      <h3>Something went wrong</h3>
+      <p>{{ errorMessage }}</p>
+      <button (click)="loadTestimonials()" class="retry-btn">
+        <span class="btn-icon">🔄</span>
+        Try Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Testimonials Grid -->
+  <div *ngIf="!loading && !errorMessage" class="testimonials-content">
+    <div class="testimonials-grid">
+      <div *ngFor="let testimonial of filteredTestimonials" class="testimonial-card">
+        <div class="testimonial-header">
+          <div class="user-info">
+            <div class="user-avatar">
+              {{ getUserName(testimonial).charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-details">
+              <h3 class="user-name">{{ getUserName(testimonial) }}</h3>
+              <span class="testimonial-date">{{ formatDate(testimonial.createdAt) }}</span>
+            </div>
+          </div>
+          <div class="rating-stars">
+            <span *ngFor="let star of getStars(testimonial.rating)"
+                  class="star"
+                  [class.filled]="star <= testimonial.rating">
+              ⭐
+            </span>
+          </div>
+        </div>
+
+        <div class="testimonial-content">
+          <p class="testimonial-message">"{{ testimonial.message }}"</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredTestimonials.length === 0" class="empty-state">
+      <div class="empty-content">
+        <div class="empty-icon">💬</div>
+        <h3>No testimonials found</h3>
+        <p>Try adjusting your search or filter criteria</p>
+        <button (click)="clearFilters()" class="primary-btn">
+          <span class="btn-icon">🔄</span>
+          Clear All Filters
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

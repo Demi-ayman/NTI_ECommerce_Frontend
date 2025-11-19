@@ -1,0 +1,93 @@
+<div class="orders-container" *ngIf="!loading; else loadingTpl">
+  <!-- Header Section -->
+  <div class="orders-header">
+    <h1 class="orders-title">📦 My Orders</h1>
+    <p class="orders-subtitle">Track and manage your recent purchases</p>
+  </div>
+
+  <!-- Orders List -->
+  <div *ngIf="orders.length > 0; else noOrdersTpl" class="orders-content">
+    <div class="orders-list">
+      <div *ngFor="let order of orders" class="order-card">
+        <div class="order-header">
+          <div class="order-meta">
+            <h3 class="order-number">Order #{{ order._id.slice(-8).toUpperCase() }}</h3>
+            <span class="order-date">{{ order.createdAt | date: 'MMM d, yyyy' }}</span>
+          </div>
+          <span class="status-badge" [ngClass]="order.status.toLowerCase()">
+            {{ order.status }}
+          </span>
+        </div>
+
+        <div class="order-body">
+          <div class="order-info-grid">
+            <div class="info-item">
+              <span class="info-label">Total Amount</span>
+              <span class="info-value">${{ order.totalPrice }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Payment Method</span>
+              <span class="info-value">{{ order.paymentMethod }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Delivery Address</span>
+              <span class="info-value">{{ order.address }}</span>
+            </div>
+          </div>
+
+          <div class="order-products">
+            <h4 class="products-title">Order Items</h4>
+            <div class="products-list">
+              <div *ngFor="let item of order.products" class="product-item">
+                <div class="product-image">
+                  <!-- <img [src]="item.product.imgURL" alt="{{ item.product.name }}" /> -->
+                  <div class="image-placeholder">📦</div>
+                </div>
+                <div class="product-details">
+                  <!-- <p class="product-name">{{ item.product.name }}</p> -->
+                  <p class="product-name">Product Item</p>
+                  <div class="product-meta">
+                    <span class="quantity">Qty: {{ item.quantity }}</span>
+                    <span class="price">${{ item.price }} each</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-footer">
+          <!-- <button class="btn btn-outline" (click)="viewOrderDetails(order)">
+            <span class="btn-icon">👁️</span>
+            View Details
+          </button> -->
+          <!-- <button class="btn btn-primary" (click)="trackOrder(order)" *ngIf="order.status !== 'delivered' && order.status !== 'cancelled'">
+            <span class="btn-icon">🚚</span>
+            Track Order
+          </button> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>Loading your orders...</p>
+  </div>
+</ng-template>
+
+<ng-template #noOrdersTpl>
+  <div class="empty-state">
+    <div class="empty-content">
+      <div class="empty-icon">📦</div>
+      <h3>No orders yet</h3>
+      <p>Start shopping to see your orders here</p>
+      <button class="btn btn-primary" routerLink="/shop">
+        <span class="btn-icon">🛍️</span>
+        Start Shopping
+      </button>
+    </div>
+  </div>
+</ng-template>

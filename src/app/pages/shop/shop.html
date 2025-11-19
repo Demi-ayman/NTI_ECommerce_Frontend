@@ -1,0 +1,91 @@
+<div class="shop-container">
+  <h1 class="title">🛍️ Our Products</h1>
+
+  <!-- Filters Section -->
+  <div class="filter-bar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        placeholder="Search products..."
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+        class="search-input"
+      />
+    </div>
+
+    <select [(ngModel)]="selectedCategory" (change)="applyFilters()" class="filter-select">
+      <option value="">All Categories</option>
+      <option *ngFor="let c of categories" [value]="c._id">{{ c.name }}</option>
+    </select>
+
+    <div class="price-range">
+      <label>💰 Price:</label>
+      <div class="price-inputs">
+        <input type="number" [(ngModel)]="priceRange.min" (change)="applyFilters()" placeholder="Min" />
+        <span>–</span>
+        <input type="number" [(ngModel)]="priceRange.max" (change)="applyFilters()" placeholder="Max" />
+      </div>
+    </div>
+
+    <select [(ngModel)]="sortBy" (change)="applyFilters()" class="filter-select">
+      <option value="name">Sort by Name</option>
+      <option value="price">Sort by Price</option>
+      <option value="createdAt">Newest</option>
+    </select>
+
+    <button class="clear-btn" (click)="clearFilters()">
+      <span class="btn-icon">🔄</span>
+      Reset
+    </button>
+  </div>
+
+  <!-- Products Section -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>Loading products...</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-state">
+    <span class="error-icon">⚠️</span>
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <div class="products-grid" *ngIf="!loading && !errorMessage">
+    <div class="product-card" *ngFor="let product of filteredProducts; trackBy: trackById">
+      <div class="product-image-container">
+        <img
+          [src]="staticURL + product.imgURL"
+          alt="{{ product.name }}"
+          class="product-image"
+          (error)="handleImageError($event)"
+        />
+        <div class="product-overlay">
+          <!-- <button class="quick-view-btn" (click)="quickView(product)">Quick View</button> -->
+        </div>
+      </div>
+
+      <div class="product-info">
+        <div class="product-category">{{ product.category.name || 'General' }}</div>
+        <h2 class="product-name">{{ product.name }}</h2>
+        <p class="product-description">{{ truncateText(product.description, 90) }}</p>
+
+        <div class="product-bottom">
+          <span class="price">{{ product.price | currency:'USD' }}</span>
+          <button class="add-btn" (click)="addToCart(product)">
+            <span class="btn-icon">🛒</span>
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !errorMessage && filteredProducts.length === 0" class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>No products found</h3>
+    <p>Try adjusting your search or filter criteria</p>
+    <button class="clear-btn" (click)="clearFilters()">Clear Filters</button>
+  </div>
+</div>

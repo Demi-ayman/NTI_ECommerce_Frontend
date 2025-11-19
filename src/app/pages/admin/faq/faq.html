@@ -1,0 +1,191 @@
+<div class="admin-panel">
+  <div class="panel-header">
+    <h1>FAQ Management</h1>
+    <p>Manage frequently asked questions and their answers</p>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-content">
+        <h3>{{ totalCount }}</h3>
+        <p>Total FAQs</p>
+      </div>
+      <div class="stat-icon">
+        <i class="fas fa-question-circle"></i>
+      </div>
+    </div>
+
+    <div *ngFor="let category of categories" class="stat-card">
+      <div class="stat-content">
+        <h3>{{ getCategoryCount(category) }}</h3>
+        <p>{{ category }}</p>
+      </div>
+      <div class="stat-icon" [class]="getCategoryClass(category)">
+        <i class="fas fa-tag"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filters Section -->
+  <div class="filters-section">
+    <div class="filters-container">
+      <div class="search-bar">
+        <div class="search-input-wrapper">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Search FAQs..."
+            class="search-input"
+          >
+          <span class="search-icon">🔍</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="categoryFilter">Filter by Category</label>
+        <select
+          id="categoryFilter"
+          [(ngModel)]="selectedCategory"
+          class="filter-select"
+        >
+          <option value="all">All Categories</option>
+          <option *ngFor="let category of categories" [value]="category">
+            {{ category }} ({{ getCategoryCount(category) }})
+          </option>
+        </select>
+      </div>
+
+      <div class="actions-group">
+        <button class="btn btn-primary" (click)="openCreateForm()">
+          <i class="fas fa-plus"></i>
+          Add New FAQ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div *ngIf="showForm" class="form-overlay">
+    <div class="form-container">
+      <div class="form-header">
+        <h3>{{ isEditing ? 'Edit FAQ' : 'Create New FAQ' }}</h3>
+        <button class="btn-close" (click)="closeForm()">×</button>
+      </div>
+
+      <form (ngSubmit)="submitForm()" class="faq-form">
+        <div class="form-group">
+          <label for="question">Question *</label>
+          <input
+            type="text"
+            id="question"
+            [(ngModel)]="formQuestion"
+            name="question"
+            required
+            class="form-input"
+            placeholder="Enter the question..."
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="answer">Answer *</label>
+          <textarea
+            id="answer"
+            [(ngModel)]="formAnswer"
+            name="answer"
+            rows="5"
+            required
+            class="form-textarea"
+            placeholder="Enter the answer..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select
+            id="category"
+            [(ngModel)]="formCategory"
+            name="category"
+            class="form-select"
+          >
+            <option *ngFor="let category of categories" [value]="category">
+              {{ category }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            {{ isEditing ? 'Update FAQ' : 'Create FAQ' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FAQs List -->
+  <div class="table-container" *ngIf="!isLoading; else loading">
+    <div class="faqs-header">
+      <h4>FAQs ({{ displayedCount }})</h4>
+      <span class="subtitle">Showing {{ displayedCount }} of {{ totalCount }} FAQs</span>
+    </div>
+
+    <div class="faqs-grid">
+      <div *ngFor="let faq of filteredFAQs" class="faq-card">
+        <div class="faq-header">
+          <div class="faq-meta">
+            <span class="category-badge" [class]="getCategoryClass(faq.category)">
+              {{ faq.category }}
+            </span>
+            <span class="date">{{ getTimeAgo(faq.updatedAt) }}</span>
+          </div>
+          <div class="faq-actions">
+            <button class="btn btn-edit" (click)="openEditForm(faq)">
+              <i class="fas fa-edit"></i>
+              Edit
+            </button>
+            <button class="btn btn-delete" (click)="deleteFAQ(faq)">
+              <i class="fas fa-trash"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="faq-content">
+          <h4 class="faq-question">{{ faq.question }}</h4>
+          <p class="faq-answer">{{ faq.answer }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="filteredFAQs.length === 0" class="no-data">
+        <div *ngIf="searchTerm || selectedCategory !== 'all'; else noFaqs">
+          <h3>No FAQs Found</h3>
+          <p>No FAQs match your current search criteria.</p>
+          <button class="btn btn-primary" (click)="searchTerm = ''; selectedCategory = 'all'">
+            Clear Filters
+          </button>
+        </div>
+        <ng-template #noFaqs>
+          <div class="no-data-content">
+            <i class="fas fa-question-circle"></i>
+            <h3>No FAQs Yet</h3>
+            <p>Get started by creating your first FAQ.</p>
+            <button class="btn btn-primary" (click)="openCreateForm()">
+              Create FAQ
+            </button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #loading>
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading FAQs...</p>
+    </div>
+  </ng-template>
+</div>

@@ -1,0 +1,227 @@
+<!-- Remove this line at the top -->
+<!-- <p>subcategories works!</p> -->
+
+<div class="admin-panel">
+  <div class="panel-header">
+    <h1>Admin Panel</h1>
+    <h2>Subcategories Management</h2>
+  </div>
+
+  <!-- Form Section -->
+  <div class="form-section">
+    <h3>{{ isEditing ? 'Edit Subcategory' : 'Add New Subcategory' }}</h3>
+    <form [formGroup]="subcategoryForm" (ngSubmit)="onSubmit()" class="subcategory-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Subcategory Name *</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            placeholder="Enter subcategory name"
+            class="form-control"
+            [class.error]="isFieldInvalid('name')"
+          >
+          <div class="error-message" *ngIf="isFieldInvalid('name')">
+            {{ getFieldError('name') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Parent Category *</label>
+          <select
+            id="category"
+            formControlName="category"
+            class="form-control"
+            [class.error]="isFieldInvalid('category')"
+          >
+            <option value="">Select a category</option>
+            <option *ngFor="let category of categories" [value]="category._id">
+              {{ category.name }}
+            </option>
+          </select>
+          <div class="error-message" *ngIf="isFieldInvalid('category')">
+            {{ getFieldError('category') }}
+          </div>
+          <div class="info-message" *ngIf="categories.length === 0">
+            No categories available. Please create categories first.
+          </div>
+          <div class="info-message" *ngIf="categories.length > 0">
+            {{ categories.length }} categories available
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          placeholder="Enter subcategory description (optional)"
+          class="form-control"
+          rows="3"
+        ></textarea>
+        <div class="char-count">
+          {{ subcategoryForm.get('description')?.value?.length || 0 }}/500
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isLoading || subcategoryForm.invalid || categories.length === 0"
+        >
+          <span *ngIf="isLoading" class="button-spinner"></span>
+          {{ isLoading ? 'Saving...' : (isEditing ? 'Update Subcategory' : 'Create Subcategory') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="resetForm()"
+          [disabled]="isLoading"
+          *ngIf="isEditing"
+        >
+          Cancel Edit
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Search and List Section -->
+  <div class="search-section">
+    <div class="search-container">
+      <div class="search-bar">
+        <div class="search-input-wrapper">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()"
+            placeholder="Search subcategories by name..."
+            class="search-input"
+          >
+          <span class="search-icon">🔍</span>
+        </div>
+        <button class="btn btn-search" (click)="onSearch()" [disabled]="isLoading">
+          Search
+        </button>
+        <button class="btn btn-clear" (click)="clearSearch()" *ngIf="searchTerm" [disabled]="isLoading">
+          Clear
+        </button>
+      </div>
+      <div class="search-info" *ngIf="searchTerm">
+        Searching for: "{{ searchTerm }}"
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container" *ngIf="!isLoading; else loading">
+    <table>
+      <thead>
+        <tr>
+          <th>NAME</th>
+          <th>PARENT CATEGORY</th>
+          <th>DESCRIPTION</th>
+          <th>PRODUCTS</th>
+          <th>STATUS</th>
+          <th>ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let subcategory of subcategories">
+          <td>
+            <div class="product-info">
+              <div class="product-details">
+                <div class="product-name">{{ subcategory.name }}</div>
+                <div class="created-date" *ngIf="subcategory.createdAt">
+                  Created: {{ subcategory.createdAt | date:'mediumDate' }}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="category-info">
+              <div class="category-name">{{ subcategory.category.name }}</div>
+            </div>
+          </td>
+          <td>
+            <div class="description" [title]="subcategory.description">
+              {{ (subcategory.description || 'No description') }}
+            </div>
+          </td>
+          <td class="product-count">
+            <span class="count-badge">{{ subcategory.productCount || 0 }}</span>
+          </td>
+          <td>
+            <span class="status" [class.active]="subcategory.isActive !== false">
+              {{ (subcategory.isActive !== false) ? 'ACTIVE' : 'INACTIVE' }}
+            </span>
+          </td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-edit" (click)="editSubcategory(subcategory)" title="Edit subcategory">
+                Edit
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="subcategories.length === 0">
+          <td colspan="6" class="no-data">
+            <div *ngIf="searchTerm; else noSubcategories">
+              No subcategories found matching "{{ searchTerm }}"
+            </div>
+            <ng-template #noSubcategories>
+              <div class="no-data-content">
+                <h3>No Subcategories Found</h3>
+                <p>Create your first subcategory using the form above.</p>
+              </div>
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #loading>
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading subcategories...
+    </div>
+  </ng-template>
+
+  <!-- Pagination -->
+  <div class="panel-footer" *ngIf="subcategories.length > 0 && !isLoading">
+    <div class="product-count">{{ totalDisplayed }}</div>
+    <div class="pagination">
+      <button
+        (click)="onPageChange(currentPage - 1)"
+        [disabled]="currentPage === 1 || isLoading"
+        class="pagination-btn"
+        title="Previous page"
+      >
+        
+      </button>
+
+      <button
+        *ngFor="let page of getPageNumbers()"
+        (click)="handlePageClick(page)"
+        [class.active]="currentPage === page"
+        [class.disabled]="page === '...'"
+        class="pagination-btn"
+        [title]="page === '...' ? '' : 'Page ' + page"
+        [disabled]="isLoading || page === '...'"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        (click)="onPageChange(currentPage + 1)"
+        [disabled]="currentPage === totalPages || isLoading"
+        class="pagination-btn"
+        title="Next page"
+      >
+
+      </button>
+    </div>
+  </div>
+</div>
